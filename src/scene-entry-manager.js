@@ -21,6 +21,7 @@ import {
 import { ObjectContentOrigins } from "./object-types";
 import { getAvatarSrc, getAvatarType } from "./utils/avatar-utils";
 import { SOUND_ENTER_SCENE } from "./systems/sound-effects-system";
+import { LogMessageType } from "./react-components/room/ChatSidebar";
 
 const isIOS = AFRAME.utils.device.isIOS();
 
@@ -156,7 +157,7 @@ export default class SceneEntryManager {
     this._setPlayerInfoFromProfile();
 
     // Explict user action changed avatar or updated existing avatar.
-    this.scene.addEventListener("avatar_updated", () => this._setPlayerInfoFromProfile(true));
+    this.scene.addEventListener("avatar_updated", () => this._setPlayerInfoFromProfile(true, true));
 
     // Store updates can occur to avatar id in cases like error, auth reset, etc.
     this.store.addEventListener("statechanged", () => this._setPlayerInfoFromProfile());
@@ -167,7 +168,7 @@ export default class SceneEntryManager {
     }
   };
 
-  _setPlayerInfoFromProfile = async (force = false) => {
+  _setPlayerInfoFromProfile = async (force = false, log = false) => {
     const avatarId = this.store.state.profile.avatarId;
     if (!force && this._lastFetchedAvatarId === avatarId) return; // Avoid continually refetching based upon state changing
 
@@ -175,6 +176,7 @@ export default class SceneEntryManager {
     const avatarSrc = await getAvatarSrc(avatarId);
 
     this.avatarRig.setAttribute("player-info", { avatarSrc, avatarType: getAvatarType(avatarId) });
+    log && APP.messageDispatch.log(LogMessageType.avatarChanged);
   };
 
   _setupKicking = () => {
